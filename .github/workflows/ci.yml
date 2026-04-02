@@ -1,28 +1,56 @@
-name: CI
-
+name: CI Pipeline
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-        branches:
-            - main
+  push:
+    branches: [ main, feature/event-crud ]
+  pull_request:
+    branches: [ main, feature/event-crud ]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  build-and-test:
+    name: Build & Test
+    # TODO: change to self-hosted once EC2 runner is registered
+    runs-on: ubuntu-latest
 
-        steps:
-        - name: Checkout code
-            uses: actions/checkout@v2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        - name: Set up Node.js
-            uses: actions/setup-node@v2
-            with:
-                node-version: '14'
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-        - name: Install dependencies
-            run: npm install
+      # ── Backend ──────────────────────────────────────────────────────────
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install
 
-        - name: Run tests
-            run: npm test
+      - name: Run backend tests
+        working-directory: ./backend
+        run: npm test
+
+      # ── Frontend ──────────────────────────────────────────────────────────
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install --legacy-peer-deps
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      # ── Deploy (placeholder – enabled once self-hosted runner is ready) ──
+      # - name: Write backend .env
+      #   working-directory: ./backend
+      #   run: |
+      #     echo "MONGO_URI=${{ secrets.MONGO_URI }}"    > .env
+      #     echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+      #     echo "PORT=${{ secrets.PORT }}"              >> .env
+      #     echo "NODE_ENV=production"                   >> .env
+      #
+      # - name: Start backend with pm2
+      #   working-directory: ./backend
+      #   run: |
+      #     pm2 describe volunteer-backend > /dev/null 2>&1 \
+      #       && pm2 restart volunteer-backend \
+      #       || pm2 start server.js --name volunteer-backend
+      #     pm2 save
