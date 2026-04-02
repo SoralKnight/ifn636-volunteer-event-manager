@@ -34,6 +34,10 @@ jobs:
         working-directory: ./frontend
         run: npm install --legacy-peer-deps
 
+      - name: Fix react-scripts permissions
+        working-directory: ./frontend
+        run: chmod +x node_modules/.bin/react-scripts
+
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
